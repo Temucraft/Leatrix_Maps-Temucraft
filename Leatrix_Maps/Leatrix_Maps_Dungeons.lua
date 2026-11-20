@@ -15,12 +15,26 @@
 		mapEvents:RegisterEvent("WORLD_MAP_UPDATE")
 
 		-- 3.3.5 GetInstanceInfo has no instance map ID: find it from the instance name
+		-- The names of every game language are in Leatrix_Maps_DungeonNames.lua (from each language's Map.dbc and
+		-- AreaTable.dbc), so this works on deDE, frFR, esES, esMX, ruRU, zhCN, zhTW and koKR clients too
+		local dungeonNames = Leatrix_Maps.DungeonNames or {}
+		local gameLocale = GetLocale()
+		if gameLocale == "enGB" or gameLocale == "enCN" or gameLocale == "enTW" then gameLocale = "enUS" end
 		local instanceByName
+
+		-- Function to get the instance name in the game language (nil if not known)
+		local function InstanceName(id)
+			local names = dungeonNames[id] and dungeonNames[id].map
+			return names and (names[gameLocale] or names.enUS)
+		end
+
 		local function InstanceMapID()
 			local name, kind = GetInstanceInfo()
 			if kind ~= "party" and kind ~= "raid" then return nil end
-			return instanceByName and (instanceByName[name] or instanceByName[GetRealZoneText()])
+			if not instanceByName then return nil end
+			return instanceByName[name] or instanceByName[GetRealZoneText()] or nil
 		end
+		LeaMapsLC.GetInstanceMapID = InstanceMapID
 
 		do
 
@@ -678,8 +692,7 @@
 			-- Function to get level name
 			local function GetLevelName(info)
 				if info[2] then return info[2] end
-				local instanceName = GetInstanceInfo()
-				return instanceName or ""
+				return InstanceName(instanceID) or GetInstanceInfo() or ""
 			end
 
 			levelMenu:SetupMenu(function(dropdown, rootDescription)
@@ -1285,7 +1298,8 @@
 				MenuUtil.CreateContextMenu(owner, function(owner, rootDescription)
 					rootDescription:CreateTitle(title)
 					for void, id in ipairs(ids) do
-						local name = GetRealZoneText(id)
+						-- (3.3.5 GetRealZoneText takes no instance ID: it gives the player's zone)
+						local name = InstanceName(id)
 						if not name or name == "" then
 							for i = 1, #previewList do
 								if previewList[i][1] == id then name = previewList[i][2] end
@@ -1307,7 +1321,7 @@
 				local list = {}
 				for i = 1, #previewList do
 					local id = previewList[i][1]
-					local name = GetRealZoneText(id)
+					local name = InstanceName(id)
 					if not name or name == "" then name = previewList[i][2] end
 					list[i] = {id = id, name = name}
 				end
@@ -1337,9 +1351,11 @@
 				elseif arg == "next" then
 					index = (previewIndex or 0) % #previewList + 1
 				elseif not index and arg then
-					-- Find instance by part of its name
+					-- Find instance by part of its name (English or the game language)
+					local find = strlower(arg)
 					for i = 1, #previewList do
-						if strfind(strlower(previewList[i][2]), arg, 1, true) then index = i; break end
+						local name = InstanceName(previewList[i][1])
+						if strfind(strlower(previewList[i][2]), find, 1, true) or name and strfind(strlower(name), find, 1, true) then index = i; break end
 					end
 				end
 				index = index or ((previewIndex or 0) % #previewList + 1)
@@ -1355,19 +1371,32 @@
 				if LeaMapsLC.UpdateZoneMenus then LeaMapsLC.UpdateZoneMenus() end
 				if not quiet then
 					if not keysOn and keyFrame and keyFrame:IsShown() then LeaMapsLC:Print("Use the left and right arrow keys to change map.") end
-					LeaMapsLC:Print(index .. "/" .. #previewList .. ": " .. previewList[index][2])
+					LeaMapsLC:Print(index .. "/" .. #previewList .. ": " .. (InstanceName(previewList[index][1]) or previewList[index][2]))
 				end
 			end
 
 
-			-- Instance names (English and translated) to instance map IDs
+			-- Instance names to instance map IDs: the game's own names in every game language first (instance names
+			-- from GetInstanceInfo and zone names from GetRealZoneText), then the English and translated addon names.
+			-- A name that two instances share is not used (false).
 			instanceByName = {}
+			local function AddName(name, id)
+				if type(name) ~= "string" or name == "" then return end
+				local old = instanceByName[name]
+				if old == nil then instanceByName[name] = id elseif old ~= id then instanceByName[name] = false end
+			end
+			for id, entry in pairs(dungeonNames) do
+				for void, name in pairs(entry.map or {}) do AddName(name, id) end
+				for void, names in pairs(entry.zone or {}) do
+					for void, name in ipairs(names) do AddName(name, id) end
+				end
+			end
 			for void, entry in ipairs(previewList) do
-				instanceByName[entry[2]] = entry[1]
-				instanceByName[L[entry[2]]] = entry[1]
+				if instanceByName[entry[2]] == nil then instanceByName[entry[2]] = entry[1] end
+				if instanceByName[L[entry[2]]] == nil then instanceByName[L[entry[2]]] = entry[1] end
 			end
 			for name, ids in pairs(LeaMapsLC.DungeonMapsByName or {}) do
-				if #ids == 1 then instanceByName[name] = ids[1] end
+				if #ids == 1 and instanceByName[name] == nil then instanceByName[name] = ids[1] end
 			end
 
 		end

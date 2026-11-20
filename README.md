@@ -45,6 +45,14 @@ backported from Leatrix Maps for The Burning Crusade Classic Anniversary
   `python3 tools/gen_ltm_data.py --db <world database> --dbc <folder with our WorldMapArea.dbc> --mysql "mysql -u... -p..."`
   (FactionTemplate, Map, AreaTable, TaxiNodes and AreaTrigger .dbc files in that folder are used when they are there)
 
+### Dungeon maps on every game language
+- The 3.3.5 game gives no instance ID inside a dungeon, only its name in the game language. `Leatrix_Maps_DungeonNames.lua`
+  has the names of the old dungeons and raids in every 3.3.5 language (enUS, deDE, esES, esMX, frFR, koKR, ruRU, zhCN, zhTW),
+  so the dungeon maps show on all of them, and the dungeon list uses the game language
+- Made from each language's Map.dbc and AreaTable.dbc by `tools/gen_dungeon_names.py`:
+  `python3 tools/gen_dungeon_names.py --dbc <folder with deDE/Map.dbc, deDE/AreaTable.dbc, enUS/..., ...>`
+- Test: `lua5.1 tests/test_dungeon_names.lua Leatrix_Maps`
+
 ### More
 - **Show unexplored areas** — removes fog of war from all zone maps
 - Zone map (battlefield minimap) visibility control — Never / Battlegrounds / Always

@@ -283,6 +283,11 @@
 		-- Set full opacity (SetMapOpacity overrides this)
 		WorldMapFrame:SetAlpha(1)
 
+		-- Dungeon maps (Leatrix Maps 1.15, Leatrix_Maps_Dungeons.lua)
+		if LeaMapsLC["ShowDungeonMaps"] == "On" and Leatrix_Maps.SetupDungeonMaps then
+			Leatrix_Maps.SetupDungeonMaps(LeaMapsLC, LeaMapsCB, L)
+		end
+
 		-- Initialise map zoom feature (Leatrix_Maps_Zoom.lua)
 		LeaMapsZoom.OnFirstLoad()
 
@@ -1525,14 +1530,14 @@
 
 					if LeaMapsLC["ShowDungeonIcons"] == "On" and (pType == "Dungeon" or pType == "Raid" or pType == "Dunraid") then
 						show = true
-					elseif LeaMapsLC["ShowTravelPoints"] == "On" and playerFaction == "Alliance" and (pType == "FlightA" or pType == "FlightN" or pType == "TravelA" or pType == "TravelN") then
-						show = true
-					elseif LeaMapsLC["ShowTravelPoints"] == "On" and playerFaction == "Horde" and (pType == "FlightH" or pType == "FlightN" or pType == "TravelH" or pType == "TravelN") then
-						show = true
-					elseif LeaMapsLC["ShowTravelOpposing"] == "On" and playerFaction == "Alliance" and (pType == "FlightH" or pType == "TravelH") then
-						show = true
-					elseif LeaMapsLC["ShowTravelOpposing"] == "On" and playerFaction == "Horde" and (pType == "FlightA" or pType == "TravelA") then
-						show = true
+					elseif pType:match("^Flight") or pType:match("^Travel") or pType:match("^Portal") then
+						-- Leatrix Maps 1.15: flight points, boats/zeppelins/trams and portals each have their own setting,
+						-- and opposing faction ones show only with Show opposing faction points of interest
+						local side = pType:sub(-1)
+						local isPortal = pType:match("^Portal") or pinInfo[5] == L["Portal"]
+						local setting = isPortal and "ShowPortals" or (pType:match("^Flight") and "ShowFlightPoints") or "ShowBoatZeppTram"
+						local own = side == "N" or (side == "A" and playerFaction == "Alliance") or (side == "H" and playerFaction == "Horde") or (side ~= "A" and side ~= "H")
+						show = LeaMapsLC[setting] == "On" and (own or LeaMapsLC["ShowOpposingPoi"] == "On")
 					elseif LeaMapsLC["ShowSpiritHealers"] == "On" and pType == "Spirit" then
 						show = true
 					elseif LeaMapsLC["ShowZoneCrossings"] == "On" and pType == "Arrow" then
@@ -1654,10 +1659,12 @@
 			local poiFrame = LeaMapsLC:CreatePanel("Show points of interest", "poiFrame")
 			LeaMapsLC:MakeTx(poiFrame, "Settings", 16, -72)
 			LeaMapsLC:MakeCB(poiFrame, "ShowDungeonIcons", "Show dungeons and raids", 16, -92, false, "If checked, dungeons and raids will be shown.")
-			LeaMapsLC:MakeCB(poiFrame, "ShowTravelPoints", "Show travel points for same faction", 16, -112, false, "If checked, travel points for the same faction will be shown.")
-			LeaMapsLC:MakeCB(poiFrame, "ShowTravelOpposing", "Show travel points for opposing faction", 16, -132, false, "If checked, travel points for the opposing faction will be shown.")
-			LeaMapsLC:MakeCB(poiFrame, "ShowZoneCrossings", "Show zone crossings", 16, -152, false, "If checked, zone crossings will be shown.")
+			LeaMapsLC:MakeCB(poiFrame, "ShowFlightPoints", "Show flight points", 16, -112, false, "If checked, flight points will be shown.")
+			LeaMapsLC:MakeCB(poiFrame, "ShowBoatZeppTram", "Show boats, zeppelins and trams", 16, -132, false, "If checked, boat harbors, zepplin towers and tram stations will be shown.")
+			LeaMapsLC:MakeCB(poiFrame, "ShowPortals", "Show portals", 16, -152, false, "If checked, portals will be shown.")
 			LeaMapsLC:MakeCB(poiFrame, "ShowSpiritHealers", "Show spirit healers", 16, -172, false, "If checked, spirit healers will be shown.")
+			LeaMapsLC:MakeCB(poiFrame, "ShowZoneCrossings", "Show zone crossings", 16, -192, false, "If checked, zone crossings will be shown.|n|nThese are arrows that indicate the zone exit pathways.")
+			LeaMapsLC:MakeCB(poiFrame, "ShowOpposingPoi", "Show opposing faction points of interest", 16, -232, false, "If checked, points of interest belonging to the opposing faction will be shown.|n|nThis applies to flight points, boats, zeppelins and trams, and portals.")
 
 			local function SetPointsOfInterest()
 				RefreshPOI()
@@ -1665,8 +1672,10 @@
 
 			LeaMapsCB["ShowPointsOfInterest"]:HookScript("OnClick", SetPointsOfInterest)
 			LeaMapsCB["ShowDungeonIcons"]:HookScript("OnClick", SetPointsOfInterest)
-			LeaMapsCB["ShowTravelPoints"]:HookScript("OnClick", SetPointsOfInterest)
-			LeaMapsCB["ShowTravelOpposing"]:HookScript("OnClick", SetPointsOfInterest)
+			LeaMapsCB["ShowFlightPoints"]:HookScript("OnClick", SetPointsOfInterest)
+			LeaMapsCB["ShowBoatZeppTram"]:HookScript("OnClick", SetPointsOfInterest)
+			LeaMapsCB["ShowPortals"]:HookScript("OnClick", SetPointsOfInterest)
+			LeaMapsCB["ShowOpposingPoi"]:HookScript("OnClick", SetPointsOfInterest)
 			LeaMapsCB["ShowSpiritHealers"]:HookScript("OnClick", SetPointsOfInterest)
 			LeaMapsCB["ShowZoneCrossings"]:HookScript("OnClick", SetPointsOfInterest)
 
@@ -1676,9 +1685,9 @@
 			end)
 			poiFrame.r:HookScript("OnClick", function()
 				LeaMapsLC["ShowDungeonIcons"] = "On"
-				LeaMapsLC["ShowTravelPoints"] = "On"
-				LeaMapsLC["ShowTravelOpposing"] = "Off"
-				LeaMapsLC["ShowSpiritHealers"] = "Off"
+				LeaMapsLC["ShowFlightPoints"] = "On"; LeaMapsLC["ShowBoatZeppTram"] = "On"; LeaMapsLC["ShowPortals"] = "On"
+				LeaMapsLC["ShowOpposingPoi"] = "Off"
+				LeaMapsLC["ShowSpiritHealers"] = "On"
 				LeaMapsLC["ShowZoneCrossings"] = "On"
 				SetPointsOfInterest()
 				poiFrame:Hide(); poiFrame:Show()
@@ -1686,9 +1695,9 @@
 			LeaMapsCB["ShowPointsOfInterestBtn"]:HookScript("OnClick", function()
 				if IsShiftKeyDown() and IsControlKeyDown() then
 					LeaMapsLC["ShowDungeonIcons"] = "On"
-					LeaMapsLC["ShowTravelPoints"] = "On"
-					LeaMapsLC["ShowTravelOpposing"] = "Off"
-					LeaMapsLC["ShowSpiritHealers"] = "Off"
+					LeaMapsLC["ShowFlightPoints"] = "On"; LeaMapsLC["ShowBoatZeppTram"] = "On"; LeaMapsLC["ShowPortals"] = "On"
+					LeaMapsLC["ShowOpposingPoi"] = "Off"
+					LeaMapsLC["ShowSpiritHealers"] = "On"
 					LeaMapsLC["ShowZoneCrossings"] = "On"
 					SetPointsOfInterest()
 					if poiFrame:IsShown() then poiFrame:Hide(); poiFrame:Show() end
@@ -1873,6 +1882,17 @@
 			pTex:SetTexCoord(0, 1, 1, 0)
 
 			InterfaceOptions_AddCategory(interPanel)
+		end
+
+		----------------------------------------------------------------------
+		-- Language dropdown (Leatrix Maps 1.15; needs a reload)
+		----------------------------------------------------------------------
+
+		do
+			LeaMapsLC:CreateDropDown("AddonLanguage", "Language", LeaMapsLC["PageF"], 146, "TOPLEFT", 16, -432,
+				{L["Automatic"], L["English"], L["Deutsch"], L["Español (EU)"], L["Español (AL)"], L["Français"], L["Italiano"], L["Português"], L["Русский"], L["한국어"], L["简体中文"], L["繁體中文"]},
+				L["Choose the language used by Leatrix Maps."])
+			LeaMapsCB["ListFrameAddonLanguage"]:HookScript("OnHide", function() LeaMapsLC:ReloadCheck() end)
 		end
 
 		----------------------------------------------------------------------
@@ -2535,6 +2555,8 @@
 		or  (LeaMapsLC["AutoChangeZones"] ~= LeaMapsDB["AutoChangeZones"])
 		or  (LeaMapsLC["UseDefaultMap"]   ~= LeaMapsDB["UseDefaultMap"])
 		or  (LeaMapsLC["ZoneMapMenu"]     ~= LeaMapsDB["ZoneMapMenu"])
+		or  (LeaMapsLC["AddonLanguage"]   ~= LeaMapsDB["AddonLanguage"])
+		or  (LeaMapsLC["ShowDungeonMaps"] ~= LeaMapsDB["ShowDungeonMaps"])
 		then
 			LeaMapsLC:LockItem(LeaMapsCB["ReloadUIButton"], false)
 			LeaMapsCB["ReloadUIButton"].f:Show()
@@ -2754,6 +2776,14 @@
 				wipe(LeaMapsDB)
 				LeaMapsLC["NoSaveSettings"] = true
 				ReloadUI()
+			elseif str == "dun" then
+				-- Preview dungeon maps (Leatrix Maps 1.15)
+				if LeaMapsLC.PreviewDungeon then
+					LeaMapsLC.PreviewDungeon(arg1)
+				else
+					LeaMapsLC:Print("Show dungeon maps is not enabled.")
+				end
+				return
 			elseif str == "nosave" then
 				LeaMapsLC.EventFrame:UnregisterEvent("PLAYER_LOGOUT")
 				LeaMapsLC:Print("Leatrix Maps will not overwrite LeaMapsDB at next logout.")
@@ -2983,9 +3013,17 @@
 			-- Elements
 			LeaMapsLC:LoadVarChk("ShowPointsOfInterest", "On")
 			LeaMapsLC:LoadVarChk("ShowDungeonIcons", "On")
-			LeaMapsLC:LoadVarChk("ShowTravelPoints", "On")
-			LeaMapsLC:LoadVarChk("ShowTravelOpposing", "Off")
-			LeaMapsLC:LoadVarChk("ShowSpiritHealers", "Off")
+			-- (1.15 settings; the older travel point settings carry over once)
+			if LeaMapsDB["ShowTravelPoints"] and LeaMapsDB["ShowFlightPoints"] == nil then
+				LeaMapsDB["ShowFlightPoints"], LeaMapsDB["ShowBoatZeppTram"], LeaMapsDB["ShowPortals"] = LeaMapsDB["ShowTravelPoints"], LeaMapsDB["ShowTravelPoints"], LeaMapsDB["ShowTravelPoints"]
+				LeaMapsDB["ShowOpposingPoi"] = LeaMapsDB["ShowTravelOpposing"]
+			end
+			LeaMapsDB["ShowTravelPoints"], LeaMapsDB["ShowTravelOpposing"] = nil, nil
+			LeaMapsLC:LoadVarChk("ShowFlightPoints", "On")
+			LeaMapsLC:LoadVarChk("ShowBoatZeppTram", "On")
+			LeaMapsLC:LoadVarChk("ShowPortals", "On")
+			LeaMapsLC:LoadVarChk("ShowOpposingPoi", "Off")
+			LeaMapsLC:LoadVarChk("ShowSpiritHealers", "On")
 			LeaMapsLC:LoadVarChk("ShowZoneCrossings", "On")
 			LeaMapsLC:LoadVarChk("ShowZoneLevels", "On")
 			LeaMapsLC:LoadVarChk("ShowFishingLevels", "On")
@@ -2995,6 +3033,8 @@
 
 			-- More
 			LeaMapsLC:LoadVarNum("ZoneMapMenu", 1, 1, 3)
+			LeaMapsLC:LoadVarNum("AddonLanguage", 1, 1, 12)			-- Addon language (Leatrix Maps 1.15)
+			LeaMapsLC:LoadVarChk("ShowDungeonMaps", "On")				-- Show dungeon maps (Leatrix Maps 1.15)
 			LeaMapsLC:LoadVarChk("EnhanceBattleMap", "Off")
 			LeaMapsLC:LoadVarChk("UnlockBattlefield", "On")
 			LeaMapsLC:LoadVarNum("BattleMapSize", 225, 150, 1200)
@@ -3055,8 +3095,10 @@
 			-- Elements
 			LeaMapsDB["ShowPointsOfInterest"] = LeaMapsLC["ShowPointsOfInterest"]
 			LeaMapsDB["ShowDungeonIcons"] = LeaMapsLC["ShowDungeonIcons"]
-			LeaMapsDB["ShowTravelPoints"] = LeaMapsLC["ShowTravelPoints"]
-			LeaMapsDB["ShowTravelOpposing"] = LeaMapsLC["ShowTravelOpposing"]
+			LeaMapsDB["ShowFlightPoints"] = LeaMapsLC["ShowFlightPoints"]
+			LeaMapsDB["ShowBoatZeppTram"] = LeaMapsLC["ShowBoatZeppTram"]
+			LeaMapsDB["ShowPortals"] = LeaMapsLC["ShowPortals"]
+			LeaMapsDB["ShowOpposingPoi"] = LeaMapsLC["ShowOpposingPoi"]
 			LeaMapsDB["ShowSpiritHealers"] = LeaMapsLC["ShowSpiritHealers"]
 			LeaMapsDB["ShowZoneCrossings"] = LeaMapsLC["ShowZoneCrossings"]
 			LeaMapsDB["ShowZoneLevels"] = LeaMapsLC["ShowZoneLevels"]
@@ -3067,6 +3109,8 @@
 
 			-- More
 			LeaMapsDB["ZoneMapMenu"] = LeaMapsLC["ZoneMapMenu"]
+			LeaMapsDB["AddonLanguage"] = LeaMapsLC["AddonLanguage"]
+			LeaMapsDB["ShowDungeonMaps"] = LeaMapsLC["ShowDungeonMaps"]
 			LeaMapsDB["EnhanceBattleMap"] = LeaMapsLC["EnhanceBattleMap"]
 			LeaMapsDB["UnlockBattlefield"] = LeaMapsLC["UnlockBattlefield"]
 			LeaMapsDB["BattleMapSize"] = LeaMapsLC["BattleMapSize"]
@@ -3101,7 +3145,7 @@
 	table.insert(UISpecialFrames, "LeaMapsGlobalPanel")
 
 	LeaMapsLC["PageF"] = PageF
-	PageF:SetSize(470, 480)
+	PageF:SetSize(470, 520)
 	PageF:Hide()
 	PageF:SetFrameStrata("FULLSCREEN_DIALOG")
 	PageF:SetFrameLevel(20)
@@ -3196,9 +3240,11 @@
 	-- 3.3.5a only
 	LeaMapsLC:MakeCB(PageF, "ShowObjectives", "Show objectives", 225, -292, false, "If checked, quest objectives will be shown.")
 
-	LeaMapsLC:MakeTx(PageF, "More", 225, -332)
-	LeaMapsLC:MakeCB(PageF, "EnhanceBattleMap", "Enhance battlefield map", 225, -352, true, "If checked, you will be able to customise the battlefield map.")
-	LeaMapsLC:MakeCB(PageF, "ShowMinimapIcon", "Show minimap button", 225, -372, false, "If checked, the minimap button will be shown.")
+	LeaMapsLC:MakeCB(PageF, "ShowDungeonMaps", "Show dungeon maps", 225, -312, true, "If checked, the map will show a map of the dungeon or raid you are in, with bosses, entrances and level changes.|n|nUse the mouse wheel to zoom and drag to pan.|n|nRight-click the dungeon map to show the normal map until you next open the map.")
+
+	LeaMapsLC:MakeTx(PageF, "More", 225, -352)
+	LeaMapsLC:MakeCB(PageF, "EnhanceBattleMap", "Enhance battlefield map", 225, -372, true, "If checked, you will be able to customise the battlefield map.")
+	LeaMapsLC:MakeCB(PageF, "ShowMinimapIcon", "Show minimap button", 225, -392, false, "If checked, the minimap button will be shown.")
 
 	LeaMapsLC:CfgBtn("IncreaseZoomBtn", LeaMapsCB["IncreaseZoom"])
 	LeaMapsLC:CfgBtn("RevealMapsBtn", LeaMapsCB["RevealMaps"])

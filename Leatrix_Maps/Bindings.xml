@@ -1,4 +1,4 @@
-﻿<Bindings>
+<Bindings>
 
 	<!-- Toggle panel -->
 	<Binding name="LEATRIX_MAPS_GLOBAL_TOGGLE" category = "Leatrix Maps">

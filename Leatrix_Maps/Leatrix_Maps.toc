@@ -3,11 +3,13 @@
 ## Title: Leatrix Maps
 ## Notes: Enhancements for your maps.
 
-## Version: 3.5.44
+## Version: 1.15.166
+## X-Temucraft: 3.3.5 Leatrix Maps, the 5Buttons 3.3.5 port brought up to Leatrix Maps 1.15.166
 ## Author: Leatrix
+## Dependencies: !TemucraftCompat
 ## SavedVariables: LeaMapsDB MagnifyOptions
 
-## OptionalDeps: Leatrix_enUS, ElvUI, Demodal, Carbonite
+## OptionalDeps: ElvUI, Demodal, Carbonite, Questie
 
 ## X-Curse-Project-ID: 463868
 
@@ -17,8 +19,10 @@ libs\LibDataBroker-1.1\LibDataBroker-1.1.lua
 libs\AceTimer-3.0\AceTimer-3.0.lua
 libs\LibDBIcon-1.0\LibDBIcon-1.0.lua
 Leatrix_Maps_Locale.lua
+Leatrix_Maps_Locale_335.lua
 Leatrix_Maps.xml
 Leatrix_Maps_Icons.lua
 Leatrix_Maps_Reveal.lua
 Leatrix_Maps_Zoom.lua
+Leatrix_Maps_Dungeons.lua
 Leatrix_Maps.lua

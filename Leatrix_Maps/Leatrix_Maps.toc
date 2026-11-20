@@ -22,6 +22,8 @@ Leatrix_Maps_Locale.lua
 Leatrix_Maps_Locale_335.lua
 Leatrix_Maps.xml
 Leatrix_Maps_Icons.lua
+Leatrix_Maps_TemucraftData.lua
+Leatrix_Maps_Temucraft.lua
 Leatrix_Maps_Reveal.lua
 Leatrix_Maps_Zoom.lua
 Leatrix_Maps_Dungeons.lua

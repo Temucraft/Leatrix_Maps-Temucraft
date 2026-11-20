@@ -806,6 +806,9 @@
 				["Wintergrasp"]              = {77, 80,  "430 (525)"},
 			}
 
+			-- Temucraft: level ranges of our extra zones (Leatrix_Maps_Temucraft.lua)
+			if Leatrix_Maps.TemucraftZoneLevels then Leatrix_Maps.TemucraftZoneLevels(zoneData, mapIDToCZ) end
+
 			-- WDM-style color selection based on player vs zone levels
 			local function GetLevelColor(minLvl, maxLvl)
 				if minLvl <= 0 then return GRAY_FONT_COLOR_CODE end

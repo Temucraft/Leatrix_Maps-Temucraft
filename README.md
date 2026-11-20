@@ -39,6 +39,12 @@ backported from Leatrix Maps for The Burning Crusade Classic Anniversary
 - Coloured class icons for party and raid members (toggleable)
 - These features were implemented from: https://github.com/rissole/Magnify-WotLK
 
+### Temucraft zones
+- Zone levels and icons (entrances of our new dungeons and raids, flight masters, spirit healers, portals) for the zones Leatrix Maps doesn't know
+- The data is in `Leatrix_Maps_TemucraftData.lua`, made from the Temucraft world database by `tools/gen_ltm_data.py`:
+  `python3 tools/gen_ltm_data.py --db <world database> --dbc <folder with our WorldMapArea.dbc> --mysql "mysql -u... -p..."`
+  (FactionTemplate, Map, AreaTable, TaxiNodes and AreaTrigger .dbc files in that folder are used when they are there)
+
 ### More
 - **Show unexplored areas** — removes fog of war from all zone maps
 - Zone map (battlefield minimap) visibility control — Never / Battlegrounds / Always

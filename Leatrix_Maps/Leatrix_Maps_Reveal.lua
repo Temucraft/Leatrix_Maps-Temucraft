@@ -1045,8 +1045,23 @@
 	-- True while overlays are tinted; must be cleared before Blizzard reuses them
 	local tintApplied = false
 
-	-- Original GetNumMapOverlays (the hook returns 0 while reveal is on)
-	local origGetNumMapOverlays
+	-- GetNumMapOverlays and the extra overlay textures. Blizzard's own globals (GetNumMapOverlays,
+	-- WorldMapFrame_Update, NUM_WORLDMAP_OVERLAYS) are never replaced or written: that tainted the world map.
+	local origGetNumMapOverlays = GetNumMapOverlays
+	local extraOverlays = {}   -- textures made here when a zone needs more than Blizzard's WorldMapOverlay frames
+	local function overlay(i)
+		if i <= NUM_WORLDMAP_OVERLAYS then return _G["WorldMapOverlay"..i] end
+		local n = i - NUM_WORLDMAP_OVERLAYS
+		local t = extraOverlays[n]
+		if not t then
+			t = WorldMapDetailFrame:CreateTexture(nil, "ARTWORK")
+			extraOverlays[n] = t
+		end
+		return t
+	end
+	local function hideExtra(from)
+		for n = math.max(1, from - NUM_WORLDMAP_OVERLAYS), #extraOverlays do extraOverlays[n]:Hide() end
+	end
 
 	-- Colour for undiscovered areas (white when tinting is off)
 	local function getTintColor()
@@ -1112,10 +1127,12 @@
 		if not mapFileName then return end
 
 		wipe(unexploredTextures)
+		hideExtra(1)
 
 		local pathPrefix = "Interface\\WorldMap\\" .. mapFileName .. "\\"
 		local discovered = getDiscoveredOverlays(pathPrefix)
 		local overlayMap = errata[mapFileName]
+		if not overlayMap then return end
 
 		-- Flag each sub-zone as explored; unmatched names fall back to tile geometry
 		local renderList = {}
@@ -1167,13 +1184,7 @@
 			local numTexturesTall = ceil(textureHeight / 256)
 			local neededTextures  = textureCount + (numTexturesWide * numTexturesTall)
 
-			-- Create extra named WorldMapOverlay frames when the errata needs more.
-			if neededTextures > NUM_WORLDMAP_OVERLAYS then
-				for j = NUM_WORLDMAP_OVERLAYS + 1, neededTextures do
-					WorldMapDetailFrame:CreateTexture("WorldMapOverlay"..j, "ARTWORK")
-				end
-				NUM_WORLDMAP_OVERLAYS = neededTextures
-			end
+			-- more textures than Blizzard's WorldMapOverlay frames come from overlay(), made here
 
 			for j = 1, numTexturesTall do
 				local tpH, tfH
@@ -1189,7 +1200,7 @@
 
 				for k = 1, numTexturesWide do
 					textureCount = textureCount + 1
-					local texture = _G["WorldMapOverlay"..textureCount]
+					local texture = overlay(textureCount)
 
 					local tpW, tfW
 					if k < numTexturesWide then
@@ -1229,6 +1240,7 @@
 			local ov = _G["WorldMapOverlay"..i]
 			if ov then ov:Hide() end
 		end
+		hideExtra(textureCount + 1)
 
 		tintApplied = LeaMapsLC and LeaMapsLC["RevTint"] == "On" and #unexploredTextures > 0 or false
 	end
@@ -1236,20 +1248,13 @@
 	function LeaMapsFC.Setup()
 		if LeaMapsFC._setup then return end
 		LeaMapsFC._setup = true
-		local _origGNMO = GetNumMapOverlays
-		origGetNumMapOverlays = _origGNMO
-		GetNumMapOverlays = function()
-			if NUM_WORLDMAP_OVERLAYS == 0 then return _origGNMO() end
-			if LeaMapsLC and LeaMapsLC["RevealMaps"] == "On" then return 0 end
-			return _origGNMO()
-		end
-		local _orig = WorldMapFrame_Update
-		WorldMapFrame_Update = function()
-			_orig()
+		-- after Blizzard draws the map: draw every sub-zone over it (Blizzard's overlays are all redrawn or hidden)
+		hooksecurefunc("WorldMapFrame_Update", function()
 			if LeaMapsLC and LeaMapsLC["RevealMaps"] == "On" then
 				updateOverlayTextures()
-			elseif tintApplied then
-				LeaMapsFC.ResetOverlayColors()
+			else
+				hideExtra(1)
+				if tintApplied then LeaMapsFC.ResetOverlayColors() end
 			end
-		end
+		end)
 	end

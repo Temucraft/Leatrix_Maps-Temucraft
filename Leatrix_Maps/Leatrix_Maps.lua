@@ -1284,7 +1284,7 @@
 		-- Class colored icons
 		----------------------------------------------------------------------
 
-		MagnifyOptions.enableOldPartyIcons = LeaMapsLC["UseClassIcons"] == "Off"
+		LeaMapsMagnifyOptions.enableOldPartyIcons = LeaMapsLC["UseClassIcons"] == "Off"
 
 		if LeaMapsLC["UseClassIcons"] == "On" then
 
@@ -1350,9 +1350,9 @@
 			local function SetZoomFunc()
 				LeaMapsCB["IncreaseZoomMax"].f:SetFormattedText("%.0f%%", LeaMapsLC["IncreaseZoomMax"] * 100)
 				LeaMapsCB["ZoomStep"].f:SetFormattedText("%.2f", LeaMapsLC["ZoomStep"])
-				MagnifyOptions.enablePersistZoom = LeaMapsLC["RememberZoom"] == "On"
-				MagnifyOptions.maxZoom = LeaMapsZoom.MAXZOOM_DEFAULT * (LeaMapsLC["IncreaseZoom"] == "On" and LeaMapsLC["IncreaseZoomMax"] or 1)
-				MagnifyOptions.zoomStep = LeaMapsLC["ZoomStep"]
+				LeaMapsMagnifyOptions.enablePersistZoom = LeaMapsLC["RememberZoom"] == "On"
+				LeaMapsMagnifyOptions.maxZoom = LeaMapsZoom.MAXZOOM_DEFAULT * (LeaMapsLC["IncreaseZoom"] == "On" and LeaMapsLC["IncreaseZoomMax"] or 1)
+				LeaMapsMagnifyOptions.zoomStep = LeaMapsLC["ZoomStep"]
 			end
 
 			LeaMapsCB["IncreaseZoomMax"]:HookScript("OnValueChanged", SetZoomFunc)

@@ -3,11 +3,11 @@
 ## Title: Leatrix Maps
 ## Notes: Enhancements for your maps.
 
-## Version: 1.15.166.1
+## Version: 1.15.166.2
 ## X-Temucraft: 3.3.5 Leatrix Maps, the 5Buttons 3.3.5 port brought up to Leatrix Maps 1.15.166
 ## Author: Leatrix
 ## Dependencies: !TemucraftCompat
-## SavedVariables: LeaMapsDB MagnifyOptions
+## SavedVariables: LeaMapsDB, LeaMapsMagnifyOptions
 
 ## OptionalDeps: ElvUI, Demodal, Carbonite, Questie
 

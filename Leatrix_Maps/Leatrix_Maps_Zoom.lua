@@ -46,7 +46,7 @@
 	}
 
 	-- Saved options (persisted via SavedVariables in the TOC)
-	MagnifyOptions = {
+	LeaMapsMagnifyOptions = {
 		enablePersistZoom   = false,
 		enableOldPartyIcons = false,
 		maxZoom             = LeaMapsZoom.MAXZOOM_DEFAULT,
@@ -430,7 +430,7 @@
 		WorldMapScrollFrame:SetHorizontalScroll(0)
 		WorldMapScrollFrame:SetVerticalScroll(0)
 
-		if MagnifyOptions.enablePersistZoom and GetCurrentMapZone() == LeaMapsZoom.PreviousState.zone then
+		if LeaMapsMagnifyOptions.enablePersistZoom and GetCurrentMapZone() == LeaMapsZoom.PreviousState.zone then
 			LeaMapsZoom.SetDetailFrameScale(LeaMapsZoom.PreviousState.scale)
 			WorldMapScrollFrame:SetHorizontalScroll(LeaMapsZoom.PreviousState.panX)
 			WorldMapScrollFrame:SetVerticalScroll(LeaMapsZoom.PreviousState.panY)
@@ -509,9 +509,9 @@
 		local frameY = this:GetTop() - cursorY
 
 		local oldScale = WorldMapDetailFrame:GetScale()
-		local newScale = oldScale * (1.0 + arg1 * MagnifyOptions.zoomStep)
+		local newScale = oldScale * (1.0 + arg1 * LeaMapsMagnifyOptions.zoomStep)
 		newScale = max(LeaMapsZoom.MIN_ZOOM, newScale)
-		newScale = min(MagnifyOptions.maxZoom, newScale)
+		newScale = min(LeaMapsMagnifyOptions.maxZoom, newScale)
 
 		LeaMapsZoom.SetDetailFrameScale(newScale)
 
@@ -775,7 +775,7 @@
 
 	function LeaMapsZoom.ColorWorldMapPartyMemberFrame(partyMemberFrame, unit)
 		local classColor = RAID_CLASS_COLORS[select(2, UnitClass(unit))]
-		if classColor and not MagnifyOptions.enableOldPartyIcons then
+		if classColor and not LeaMapsMagnifyOptions.enableOldPartyIcons then
 			local size = LeaMapsZoom.GROUP_ICON_SIZE / WORLDMAP_SETTINGS.size
 			partyMemberFrame.colorIcon:SetSize(size, size)
 			partyMemberFrame.colorIcon:Show()
@@ -807,10 +807,10 @@
 
 	function LeaMapsZoom.OnFirstLoad()
 		-- Ensure option defaults
-		MagnifyOptions.enablePersistZoom   = MagnifyOptions.enablePersistZoom   or LeaMapsZoom.ENABLEPERSISTZOOM_DEFAULT
-		MagnifyOptions.enableOldPartyIcons = MagnifyOptions.enableOldPartyIcons or LeaMapsZoom.ENABLEOLDPARTYICONS_DEFAULT
-		MagnifyOptions.maxZoom             = MagnifyOptions.maxZoom             or LeaMapsZoom.MAXZOOM_DEFAULT
-		MagnifyOptions.zoomStep            = MagnifyOptions.zoomStep            or LeaMapsZoom.ZOOMSTEP_DEFAULT
+		LeaMapsMagnifyOptions.enablePersistZoom   = LeaMapsMagnifyOptions.enablePersistZoom   or LeaMapsZoom.ENABLEPERSISTZOOM_DEFAULT
+		LeaMapsMagnifyOptions.enableOldPartyIcons = LeaMapsMagnifyOptions.enableOldPartyIcons or LeaMapsZoom.ENABLEOLDPARTYICONS_DEFAULT
+		LeaMapsMagnifyOptions.maxZoom             = LeaMapsMagnifyOptions.maxZoom             or LeaMapsZoom.MAXZOOM_DEFAULT
+		LeaMapsMagnifyOptions.zoomStep            = LeaMapsMagnifyOptions.zoomStep            or LeaMapsZoom.ZOOMSTEP_DEFAULT
 
 		WorldMapScrollFrame:SetScrollChild(WorldMapDetailFrame)
 		WorldMapScrollFrame:SetScript("OnMouseWheel", LeaMapsZoom.WorldMapScrollFrame_OnMouseWheel)
